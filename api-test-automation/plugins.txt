@@ -1,0 +1,6 @@
+workflow-aggregator
+git
+docker-workflow
+pipeline-utility-steps
+junit
+allure-jenkins-plugin
