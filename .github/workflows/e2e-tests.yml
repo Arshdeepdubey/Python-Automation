@@ -34,6 +34,12 @@ jobs:
       - name: Verify Chrome is available
         run: google-chrome --version
 
+      - name: Check target site reachability from this runner
+        run: |
+          curl -sS -D - -o response.html -w "\nHTTP Status: %{http_code}\n" https://practicesoftwaretesting.com || true
+          echo "--- first 2KB of response body ---"
+          head -c 2000 response.html || true
+
       - name: Run E2E test suite
         env:
           HEADLESS: "true"

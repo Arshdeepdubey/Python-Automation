@@ -2,7 +2,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 20
 
 
 class BasePage:
