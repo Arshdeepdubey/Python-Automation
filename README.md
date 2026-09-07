@@ -88,6 +88,15 @@ An HTML report is written to `reports/report.html` after every run.
   latency to the live site is higher than on a local connection. Tests reach checkout
   via the in-app cart link (`HomePage.open_cart()`) instead of a full-page navigation,
   which reuses the already-loaded cart state and sidesteps the race.
+- The documented demo login (`customer@practicesoftwaretesting.com`) is a public
+  credential shared by every automation script and tutorial that uses this site, so its
+  account state is effectively contested global state — an in-flight edit from an
+  unrelated script elsewhere can make a state-mutating flow like checkout intermittently
+  time out for reasons that have nothing to do with this suite's code. The logged-in
+  checkout test avoids that entirely by registering its own fresh, uniquely-named user
+  (via `RegisterPage` / `utils.test_data.new_registration_user()`) and checking out as
+  that account instead. The shared demo login is still used for the plain login test,
+  where nothing is mutated.
 
 ## CI/CD
 
