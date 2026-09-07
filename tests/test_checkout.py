@@ -25,7 +25,8 @@ def _add_first_search_result_to_cart(driver, base_url, term):
 def test_logged_in_checkout_completes_successfully(driver, base_url, test_user):
     _add_first_search_result_to_cart(driver, base_url, "pliers")
 
-    checkout = CheckoutPage(driver).load(base_url)
+    HomePage(driver).open_cart()
+    checkout = CheckoutPage(driver)
     checkout.proceed_from_cart()
     checkout.login(test_user["email"], test_user["password"])
     checkout.fill_address(**ADDRESS)
@@ -39,7 +40,8 @@ def test_logged_in_checkout_completes_successfully(driver, base_url, test_user):
 def test_guest_checkout_completes_successfully(driver, base_url):
     _add_first_search_result_to_cart(driver, base_url, "pliers")
 
-    checkout = CheckoutPage(driver).load(base_url)
+    HomePage(driver).open_cart()
+    checkout = CheckoutPage(driver)
     checkout.proceed_from_cart()
     checkout.checkout_as_guest("guest.e2e@example.com", "Guest", "Shopper")
     checkout.fill_address(**ADDRESS)
