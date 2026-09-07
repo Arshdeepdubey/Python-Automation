@@ -33,8 +33,17 @@ def test_user():
     return {"email": TEST_USER_EMAIL, "password": TEST_USER_PASSWORD}
 
 
+@pytest.fixture(scope="session")
+def chromedriver_path():
+    # Resolving the driver hits the network (googlechromelabs.github.io) to
+    # check the matching version. Doing this once per session instead of
+    # once per test avoids 11x the network calls -- and 11x the chance of
+    # hitting a transient connection blip in CI.
+    return ChromeDriverManager().install()
+
+
 @pytest.fixture
-def driver(request):
+def driver(request, chromedriver_path):
     headless = os.getenv("HEADLESS", "true").lower() == "true" and not request.config.getoption("--no-headless")
 
     options = Options()
@@ -58,7 +67,7 @@ def driver(request):
         "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
     )
 
-    chrome_driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    chrome_driver = webdriver.Chrome(service=Service(chromedriver_path), options=options)
     chrome_driver.execute_cdp_cmd(
         "Page.addScriptToEvaluateOnNewDocument",
         {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"},
