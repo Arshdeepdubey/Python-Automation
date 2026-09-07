@@ -38,7 +38,8 @@ def test_cart_page_lists_added_product(driver, base_url):
     product_name = product.name()
     product.add_to_cart()
 
-    checkout = CheckoutPage(driver).load(base_url)
+    HomePage(driver).open_cart()
+    checkout = CheckoutPage(driver)
 
     assert product_name in checkout.text_of(checkout.PRODUCT_TITLE)
     assert checkout.cart_total()

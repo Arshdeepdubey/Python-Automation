@@ -33,8 +33,17 @@ def test_user():
     return {"email": TEST_USER_EMAIL, "password": TEST_USER_PASSWORD}
 
 
+@pytest.fixture(scope="session")
+def chromedriver_path():
+    # Resolving the driver hits the network (googlechromelabs.github.io) to
+    # check the matching version. Doing this once per session instead of
+    # once per test avoids 11x the network calls -- and 11x the chance of
+    # hitting a transient connection blip in CI.
+    return ChromeDriverManager().install()
+
+
 @pytest.fixture
-def driver(request):
+def driver(request, chromedriver_path):
     headless = os.getenv("HEADLESS", "true").lower() == "true" and not request.config.getoption("--no-headless")
 
     options = Options()
@@ -45,7 +54,24 @@ def driver(request):
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
 
-    chrome_driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    # The site's Angular app runs bot-fingerprint checks; a stock Selenium
+    # Chrome exposes navigator.webdriver=true and other automation tells,
+    # which can cause it to silently serve a stripped page. These flags
+    # (plus the CDP override below) make the browser look like a regular
+    # user's Chrome, which this practice site expects to be automated.
+    options.add_argument("--disable-blink-features=AutomationControlled")
+    options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    options.add_experimental_option("useAutomationExtension", False)
+    options.add_argument(
+        "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+        "(KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36"
+    )
+
+    chrome_driver = webdriver.Chrome(service=Service(chromedriver_path), options=options)
+    chrome_driver.execute_cdp_cmd(
+        "Page.addScriptToEvaluateOnNewDocument",
+        {"source": "Object.defineProperty(navigator, 'webdriver', {get: () => undefined});"},
+    )
     chrome_driver.implicitly_wait(0)
 
     yield chrome_driver
@@ -65,3 +91,5 @@ def pytest_runtest_makereport(item, call):
             os.makedirs(screenshots_dir, exist_ok=True)
             safe_name = item.name.replace("/", "_")
             chrome_driver.save_screenshot(os.path.join(screenshots_dir, f"{safe_name}.png"))
+            with open(os.path.join(screenshots_dir, f"{safe_name}.html"), "w", encoding="utf-8") as f:
+                f.write(chrome_driver.page_source)

@@ -34,10 +34,6 @@ class CheckoutPage(BasePage):
     FINISH_BUTTON = BasePage.data_test("finish")
     PAYMENT_SUCCESS_MESSAGE = BasePage.data_test("payment-success-message")
 
-    def load(self, base_url):
-        self.driver.get(f"{base_url}/checkout")
-        return self
-
     def cart_total(self):
         return self.text_of(self.CART_TOTAL)
 
